@@ -1,4 +1,4 @@
-const calculateBmi = (height: number, weight: number): string => {
+export const calculateBmi = (height: number, weight: number): string => {
   const heightInMeters = height / 100;
   const bmi = 703 * (weight / (heightInMeters * heightInMeters));
 
@@ -13,18 +13,20 @@ const calculateBmi = (height: number, weight: number): string => {
   }
 };
 
-const args = process.argv.slice(2);
+if (process.argv[1] === import.meta.filename) {
+  const args = process.argv.slice(2);
 
-if (args.length < 2) {
-  console.log("Please provide height and weight as arguments.");
-} else {
-  const height = Number(args[0]);
-  const weight = Number(args[1]);
-
-  if (isNaN(height) || isNaN(weight)) {
-    console.log("Error: both arguments must be numbers.");
+  if (args.length < 2) {
+    console.log("Please provide height and weight as arguments.");
   } else {
-    console.log(calculateBmi(height, weight));
+    const height = Number(args[0]);
+    const weight = Number(args[1]);
+
+    if (isNaN(height) || isNaN(weight)) {
+      console.log("Error: both arguments must be numbers.");
+    } else {
+      console.log(calculateBmi(height, weight));
+    }
   }
 }
 
