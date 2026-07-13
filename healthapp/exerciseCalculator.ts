@@ -1,4 +1,4 @@
-interface ExerciseResult {
+export interface ExerciseResult {
   periodLength: number;
   trainingDays: number;
   success: boolean;
@@ -8,7 +8,7 @@ interface ExerciseResult {
   average: number;
 }
 
-const calculateExercises = (
+export const calculateExercises = (
   exerciseHours: number[],
   target: number,
 ): ExerciseResult => {
@@ -42,19 +42,21 @@ const calculateExercises = (
   };
 };
 
-const args = process.argv.slice(2);
+if (process.argv[1] === import.meta.filename) {
+  const args = process.argv.slice(2);
 
-if (args.length < 2) {
-  console.log("Please provide target and exercise hours as arguments.");
-} else {
-  const allNumbers = args.every((arg) => !isNaN(Number(arg)));
-
-  if (!allNumbers) {
-    console.log("Error: all arguments must be numbers.");
+  if (args.length < 2) {
+    console.log("Please provide target and exercise hours as arguments.");
   } else {
-    const target = Number(args[0]);
-    const exerciseHours = args.slice(1).map(Number);
-    console.log(calculateExercises(exerciseHours, target));
+    const allNumbers = args.every((arg) => !isNaN(Number(arg)));
+
+    if (!allNumbers) {
+      console.log("Error: all arguments must be numbers.");
+    } else {
+      const target = Number(args[0]);
+      const exerciseHours = args.slice(1).map(Number);
+      console.log(calculateExercises(exerciseHours, target));
+    }
   }
 }
 

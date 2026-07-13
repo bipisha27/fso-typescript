@@ -10,16 +10,20 @@
     "calculateBmi": "tsc && node bmiCalculator.ts",
     "calculateExercise": "tsc && node exerciseCalculator.ts",
     "start": "node index.ts",
-    "dev": "tsx watch index.ts"
+    "dev": "tsx watch index.ts",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
+    "eslint": "^10.7.0",
     "tsx": "^4.23.0",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.63.0"
   },
   "dependencies": {
     "express": "^5.2.1"
