@@ -1,6 +1,7 @@
 import express from "express";
 import patientService from "../services/patientService.js";
-import { toNewPatientEntry } from "../utils.js";
+import { parseNewPatientEntry } from "../utils.js";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -10,14 +11,12 @@ router.get("/", (_req, res) => {
 
 router.post("/", (req, res) => {
   try {
-    const newPatientEntry = toNewPatientEntry(req.body);
-
+    const newPatientEntry = parseNewPatientEntry(req.body);
     const addedPatient = patientService.addPatient(newPatientEntry);
-
     res.json(addedPatient);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      res.status(400).send({ error: error.message });
+    if (error instanceof z.ZodError) {
+      res.status(400).send({ error: error.issues });
     } else {
       res.status(400).send({ error: "unknown error" });
     }
