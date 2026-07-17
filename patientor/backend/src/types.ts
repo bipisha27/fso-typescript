@@ -14,6 +14,8 @@ export interface Diagnosis {
   latin?: string;
 }
 
+export interface Entry {}
+
 export interface Patient {
   id: string;
   name: string;
@@ -21,6 +23,7 @@ export interface Patient {
   ssn: string;
   gender: Gender;
   occupation: string;
+  entries: Entry[];
 }
 
 export const NewEntrySchema = z.object({
@@ -33,4 +36,4 @@ export const NewEntrySchema = z.object({
 
 export type NewPatientEntry = z.infer<typeof NewEntrySchema>;
 
-export type NonSensitivePatient = Omit<Patient, "ssn">;
+export type NonSensitivePatient = Omit<Patient, "ssn" | "entries">;
