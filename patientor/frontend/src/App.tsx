@@ -4,7 +4,9 @@ import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
 import { Button, Divider, Container, Typography } from "@mui/material";
 
 import { apiBaseUrl } from "./constants";
-import { Patient, Gender } from "./types";
+import { Patient, Gender, Diagnosis } from "./types";
+
+import diagnosisService from "./services/diagnoses";
 
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
@@ -15,7 +17,11 @@ import PatientListPage from "./components/PatientListPage";
 
 import { useParams } from "react-router-dom";
 
-const PatientPage = () => {
+interface PatientPageProps {
+  diagnoses: Diagnosis[];
+}
+
+const PatientPage = ({ diagnoses }: PatientPageProps) => {
   const { id } = useParams();
   const [patient, setPatient] = useState<Patient>();
 
@@ -60,12 +66,33 @@ const PatientPage = () => {
       <Typography>occupation: {patient.occupation}</Typography>
 
       <Typography>date of birth: {patient.dateOfBirth}</Typography>
+
+      <Typography variant="h5" fontWeight="bold" sx={{ marginTop: 2 }}>
+        Entries
+      </Typography>
+      {patient.entries.map((entry) => (
+        <div key={entry.id}>
+          <p>{entry.date}</p>
+          <p>{entry.description}</p>
+
+          {entry.diagnosisCodes?.map((code) => {
+            const diagnosis = diagnoses.find((d) => d.code === code);
+
+            return (
+              <li key={code}>
+                {code} {diagnosis?.name}
+              </li>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 };
 
 const App = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
 
   useEffect(() => {
     void axios.get<void>(`${apiBaseUrl}/ping`);
@@ -75,6 +102,12 @@ const App = () => {
       setPatients(patients);
     };
     void fetchPatientList();
+
+    const fetchDiagnoses = async () => {
+      const diagnoses = await diagnosisService.getAll();
+      setDiagnoses(diagnoses);
+    };
+    void fetchDiagnoses();
   }, []);
 
   return (
@@ -101,7 +134,10 @@ const App = () => {
                 />
               }
             />
-            <Route path="/patients/:id" element={<PatientPage />} />
+            <Route
+              path="/patients/:id"
+              element={<PatientPage diagnoses={diagnoses} />}
+            />
           </Routes>
         </Container>
       </Router>
