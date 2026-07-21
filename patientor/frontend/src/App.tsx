@@ -3,10 +3,14 @@ import axios from "axios";
 import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
 import { Button, Divider, Container, Typography } from "@mui/material";
 
+import AddEntryForm from "./components/AddEntryForm";
+
 import { apiBaseUrl } from "./constants";
-import { Patient, Gender, Diagnosis } from "./types";
+import { Patient, Gender, Diagnosis, NewEntry } from "./types";
 
 import diagnosisService from "./services/diagnoses";
+
+import EntryDetails from "./EntryDetails";
 
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
@@ -24,6 +28,7 @@ interface PatientPageProps {
 const PatientPage = ({ diagnoses }: PatientPageProps) => {
   const { id } = useParams();
   const [patient, setPatient] = useState<Patient>();
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!id) {
@@ -41,6 +46,39 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
   if (!patient) {
     return <Typography>loading...</Typography>;
   }
+
+  const submitNewEntry = async (entry: NewEntry) => {
+    if (!id || !patient) {
+      return;
+    }
+
+    try {
+      const addedEntry = await patientService.addEntry(id, entry);
+
+      setPatient({
+        ...patient,
+        entries: patient.entries.concat(addedEntry),
+      });
+
+      setError("");
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        const data = e.response?.data;
+
+        if (data?.error && Array.isArray(data.error)) {
+          setError(
+            data.error
+              .map((issue: { message: string }) => issue.message)
+              .join(", "),
+          );
+        } else {
+          setError("Failed to add entry.");
+        }
+      } else {
+        setError("Unknown error.");
+      }
+    }
+  };
 
   return (
     <div>
@@ -67,24 +105,24 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
 
       <Typography>date of birth: {patient.dateOfBirth}</Typography>
 
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      <AddEntryForm
+        onSubmit={submitNewEntry}
+        onCancel={() => {
+          console.log("Cancel");
+        }}
+      />
+
       <Typography variant="h5" fontWeight="bold" sx={{ marginTop: 2 }}>
         Entries
       </Typography>
       {patient.entries.map((entry) => (
-        <div key={entry.id}>
-          <p>{entry.date}</p>
-          <p>{entry.description}</p>
-
-          {entry.diagnosisCodes?.map((code) => {
-            const diagnosis = diagnoses.find((d) => d.code === code);
-
-            return (
-              <li key={code}>
-                {code} {diagnosis?.name}
-              </li>
-            );
-          })}
-        </div>
+        <EntryDetails key={entry.id} entry={entry} />
       ))}
     </div>
   );
