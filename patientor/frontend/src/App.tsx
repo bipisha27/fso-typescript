@@ -5,10 +5,10 @@ import { Button, Divider, Container, Typography } from "@mui/material";
 
 import AddEntryForm from "./components/AddEntryForm";
 
-import { apiBaseUrl } from "./constants";
-import { Patient, Gender, Diagnosis, NewEntry } from "./types";
-
 import diagnosisService from "./services/diagnoses";
+
+import { apiBaseUrl } from "./constants";
+import { Patient, Gender, NewEntry, Diagnosis } from "./types";
 
 import EntryDetails from "./EntryDetails";
 
@@ -21,19 +21,22 @@ import PatientListPage from "./components/PatientListPage";
 
 import { useParams } from "react-router-dom";
 
-interface PatientPageProps {
-  diagnoses: Diagnosis[];
-}
-
-const PatientPage = ({ diagnoses }: PatientPageProps) => {
+const PatientPage = () => {
   const { id } = useParams();
   const [patient, setPatient] = useState<Patient>();
+  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!id) {
-      return;
-    }
+    const fetchDiagnoses = async () => {
+      const diagnoses = await diagnosisService.getAll();
+      setDiagnoses(diagnoses);
+    };
+    void fetchDiagnoses();
+  });
+
+  useEffect(() => {
+    if (!id) return;
 
     const fetchPatient = async () => {
       const patient = await patientService.get(id);
@@ -48,23 +51,18 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
   }
 
   const submitNewEntry = async (entry: NewEntry) => {
-    if (!id || !patient) {
-      return;
-    }
+    if (!id || !patient) return;
 
     try {
       const addedEntry = await patientService.addEntry(id, entry);
-
       setPatient({
         ...patient,
         entries: patient.entries.concat(addedEntry),
       });
-
       setError("");
     } catch (e) {
       if (axios.isAxiosError(e)) {
         const data = e.response?.data;
-
         if (data?.error && Array.isArray(data.error)) {
           setError(
             data.error
@@ -93,16 +91,13 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
         }}
       >
         {patient.name}
-
         {patient.gender === Gender.Male && <MaleIcon />}
         {patient.gender === Gender.Female && <FemaleIcon />}
         {patient.gender === Gender.Other && <TransgenderIcon />}
       </Typography>
 
       <Typography>ssn: {patient.ssn}</Typography>
-
       <Typography>occupation: {patient.occupation}</Typography>
-
       <Typography>date of birth: {patient.dateOfBirth}</Typography>
 
       {error && (
@@ -113,9 +108,8 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
 
       <AddEntryForm
         onSubmit={submitNewEntry}
-        onCancel={() => {
-          console.log("Cancel");
-        }}
+        diagnoses={diagnoses}
+        onCancel={() => console.log("Cancel")}
       />
 
       <Typography variant="h5" fontWeight="bold" sx={{ marginTop: 2 }}>
@@ -130,7 +124,6 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
 
 const App = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
 
   useEffect(() => {
     void axios.get<void>(`${apiBaseUrl}/ping`);
@@ -140,12 +133,6 @@ const App = () => {
       setPatients(patients);
     };
     void fetchPatientList();
-
-    const fetchDiagnoses = async () => {
-      const diagnoses = await diagnosisService.getAll();
-      setDiagnoses(diagnoses);
-    };
-    void fetchDiagnoses();
   }, []);
 
   return (
@@ -172,10 +159,7 @@ const App = () => {
                 />
               }
             />
-            <Route
-              path="/patients/:id"
-              element={<PatientPage diagnoses={diagnoses} />}
-            />
+            <Route path="/patients/:id" element={<PatientPage />} />
           </Routes>
         </Container>
       </Router>
