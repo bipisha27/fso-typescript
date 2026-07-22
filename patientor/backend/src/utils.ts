@@ -1,4 +1,3 @@
-import { unknown } from "zod";
 import {
   NewPatientEntry,
   NewPatientSchema,
